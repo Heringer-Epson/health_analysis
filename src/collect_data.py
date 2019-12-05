@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import pandas as pd
 import src.utils as utils
 from src.proc_time import Process_Time
@@ -8,26 +9,38 @@ exertype_num2str = {1001:'Walking', 0:'Custom', 14001:'Swimming',
                     13001:'Hiking', 15006:'Elliptical'}
 
 def data_collector(dataset):
-    if dataset == 'Sleep-1':
-        fpath = os.path.join('./data/', utils.dataset2fname[dataset])
-        df_raw = pd.read_csv(fpath, header=0, index_col=0, low_memory=False)
 
+    fpath = os.path.join('./data/', utils.dataset2fname[dataset])
+    df_raw = pd.read_csv(fpath, header=0, index_col=0, low_memory=False)
+
+    if dataset == 'Sleep':
         #Rename columns for simplicity.
         newcols = {col : col.replace('com.samsung.health.sleep.', '')
                    for col in df_raw.columns}
         df_raw.rename(columns=newcols, inplace=True) 
         df = Process_Time(df_raw, 'start_time', 'end_time', 'time_offset',
                           True, 'milisec').run()
-        df.rename(columns={'duration':'Sleep_duration'}, inplace=True)
-
+        
+        df['Sleep Duration [hr]'] = np.array([
+          t.days*24. + t.seconds/3600. for t in df['duration']])
+        
     elif dataset == 'Exercise':
-        fpath = os.path.join('./data/', utils.dataset2fname[dataset])
-        df_raw = pd.read_csv(fpath, header=0, index_col=0, low_memory=False)
-
         df = Process_Time(df_raw, 'start_time', 'end_time', 'time_offset',
                           False, '%Y-%m-%d %H:%M:%S.%f').run()
 
-        #Additional column. Type of exercise.
+        df['Exercise Duration [min]'] = np.array([
+          t.days*24.*60 + t.seconds/60. for t in df['duration']]) #In minutes
         df['exercise'] = df['exercise_type'].map(exertype_num2str)
 
+    elif dataset == 'Stress':
+        df_raw.dropna(subset=['start_time', 'end_time'], inplace=True)
+        df = Process_Time(df_raw, 'start_time', 'end_time', 'time_offset',
+                          False, '%Y-%m-%d %H:%M:%S.%f').run()
+
+    elif dataset == 'Step':
+        df = Process_Time(df_raw, 'day_time', None, None, False, 'milisec').run()
+
+    elif dataset == 'Heart':
+        df = Process_Time(df_raw, 'start_time', 'end_time', 'time_offset',
+                          False, '%Y-%m-%d %H:%M:%S.%f').run()          
     return df

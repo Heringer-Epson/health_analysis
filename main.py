@@ -103,7 +103,7 @@ def make_variable_dropdown(options):
                Input('pg-slider', 'value'),])
 def tab_IR_graph(ds1, y1, z1, ds2, y2, z2, date_range):
 
-    fig = make_subplots(rows=2, cols=1)
+    fig = make_subplots(rows=2, cols=1, vertical_spacing = 0.05)
     t_min, t_max = utils.format_date(date_range)
 
     df1 = data_collector(ds1)   
@@ -120,7 +120,7 @@ def tab_IR_graph(ds1, y1, z1, ds2, y2, z2, date_range):
             mode='markers',
             opacity=1.,
             marker=dict(size=5),
-            name=ds1,
+            showlegend=False
         ), row=1, col=1)
     
     else:
@@ -144,7 +144,7 @@ def tab_IR_graph(ds1, y1, z1, ds2, y2, z2, date_range):
             mode='markers',
             opacity=1.,
             marker=dict(size=5),
-            name=ds2,
+            showlegend=False
         ), row=2, col=1)
     
     else:
@@ -164,7 +164,10 @@ def tab_IR_graph(ds1, y1, z1, ds2, y2, z2, date_range):
     fig.update_xaxes(title_text='Date', row=2, col=1)
     fig.update_yaxes(title_text=y2, row=2, col=1)
 
-    fig.update_layout(height=700)
+    fig.update_layout(
+        height=650,
+        margin=go.layout.Margin(b=20,t=10),)
+
     return fig
  
 
@@ -186,14 +189,13 @@ def tab_pg_slider(ds1, ds2):
             step=1./12.
         )
     )  
-'''
 
-@dash_app.callback(Output('tab-IR-slider-container', 'children'),
-              [Input('IR-year-slider', 'value')])
+@dash_app.callback(Output('tab-pg-slider-container', 'children'),
+              [Input('pg-slider', 'value')])
 def tab_IR_slider_container(date_range):
     t_min, t_max = utils.format_date(date_range)
     return 'Date range is "{}" -- "{}"'.format(t_min, t_max)
-'''
+
 
 #=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-END: TABs-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-
                                 
