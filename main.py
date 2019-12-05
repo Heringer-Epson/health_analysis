@@ -3,6 +3,7 @@ import json
 import dash
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
+from plotly.subplots import make_subplots
 import dash_html_components as html
 import dash_core_components as dcc
 import dash_table
@@ -44,72 +45,148 @@ def render_content(tab):
 
 #=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-TAB: timeprog-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-@dash_app.callback(Output('tab-timeprog-D1', 'children'),
-                   [Input('tab-timeprog-dataset', 'value')])
-def retrieve_dataset(dataset):
-    df = data_collector(dataset)
-    return df.to_json()
-
-@dash_app.callback(Output('tab-timeprog-y', 'options'),
-                   [Input('tab-timeprog-dataset', 'value')])
+#Dataset 1 (top plot) inputs.
+@dash_app.callback(Output('tab-tp-ds1-y', 'options'),
+                   [Input('tab-tp-ds1', 'value')])
 def make_variable_dropdown(dataset):
-    #df_dict = json.loads(df_json)
     cols = utils.dataset2cols[dataset]
-    #return  [{'label': i, 'value': i} for i in df_dict.keys()]
     return  [{'label': i, 'value': i} for i in cols]
 
-@dash_app.callback(Output('tab-timeprog-y', 'value'),
-                   [Input('tab-timeprog-y', 'options')])
+@dash_app.callback(Output('tab-tp-ds1-y', 'value'),
+                   [Input('tab-tp-ds1-y', 'options')])
 def make_variable_dropdown(options):
     return options[0]['value']
 
-'''
-@dash_app.callback(Output('tab-IR-graph', 'figure'),
-              [Input('tab-IR-curr-dropdown', 'value'),
-               Input('tab-IR-tenor-dropdown', 'value'),
-               Input('IR-year-slider', 'value')])
-def tab_IR_graph(curr, tenor, date_range):
+@dash_app.callback(Output('tab-tp-ds1-z', 'options'),
+                   [Input('tab-tp-ds1', 'value')])
+def make_colorcode_dropdown(dataset):
+    cols = utils.dataset2zoptions[dataset]
+    return  [{'label': i, 'value': i} for i in cols]
 
+@dash_app.callback(Output('tab-tp-ds1-z', 'value'),
+                   [Input('tab-tp-ds1-z', 'options')])
+def make_variable_dropdown(options):
+    return options[0]['value']
+
+
+#Dataset 2 (bottom plot) inputs.
+@dash_app.callback(Output('tab-tp-ds2-y', 'options'),
+                   [Input('tab-tp-ds2', 'value')])
+def make_variable_dropdown(dataset):
+    cols = utils.dataset2cols[dataset]
+    return  [{'label': i, 'value': i} for i in cols]
+
+@dash_app.callback(Output('tab-tp-ds2-y', 'value'),
+                   [Input('tab-tp-ds2-y', 'options')])
+def make_variable_dropdown(options):
+    return options[0]['value']
+
+@dash_app.callback(Output('tab-tp-ds2-z', 'options'),
+                   [Input('tab-tp-ds2', 'value')])
+def make_colorcode_dropdown(dataset):
+    cols = utils.dataset2zoptions[dataset]
+    return  [{'label': i, 'value': i} for i in cols]
+
+
+@dash_app.callback(Output('tab-tp-ds2-z', 'value'),
+                   [Input('tab-tp-ds2-z', 'options')])
+def make_variable_dropdown(options):
+    return options[0]['value']
+
+@dash_app.callback(Output('tab-tp-graph', 'figure'),
+              [Input('tab-tp-ds1', 'value'),
+               Input('tab-tp-ds1-y', 'value'),
+               Input('tab-tp-ds1-z', 'value'),
+               Input('tab-tp-ds2', 'value'),
+               Input('tab-tp-ds2-y', 'value'),
+               Input('tab-tp-ds2-z', 'value'),
+               Input('pg-slider', 'value'),])
+def tab_IR_graph(ds1, y1, z1, ds2, y2, z2, date_range):
+
+    fig = make_subplots(rows=2, cols=1)
     t_min, t_max = utils.format_date(date_range)
-    M = Preproc_Data(curr=curr, t_ival=[t_min, t_max]).run()
-    df = M['{}m_1d'.format(str(tenor))]
+
+    df1 = data_collector(ds1)   
+    df2 = data_collector(ds2)   
+
+    df1 = df1[((df1['Start_time_obj'] > t_min) & (df1['Start_time_obj'] < t_max))]
+    df2 = df2[((df2['Start_time_obj'] > t_min) & (df2['Start_time_obj'] < t_max))]
+
+    #df1, df2 = utils.trim_time(df1, df2)
+    if z1 == 'None':
+        fig.append_trace(go.Scattergl(
+            x=df1['Start_time_obj'],
+            y=df1[y1],
+            mode='markers',
+            opacity=1.,
+            marker=dict(size=5),
+            name=ds1,
+        ), row=1, col=1)
     
-    traces = []
-    traces.append(go.Scattergl(
-        x=df['date'],
-        y=df['ir'],
-        text=df['ir_transf'],
-        mode='lines',
-        opacity=.5,
-        line=dict(color='black', width=3.),
-        name='1 day',
-    ))
+    else:
+        for i in df1[z1].unique():
+            dff = df1[df1[z1] == i]
+            fig.append_trace(go.Scattergl(
+                x=dff['Start_time_obj'],
+                y=dff[y1],
+                mode='markers',
+                opacity=1.,
+                marker=dict(size=5),
+                name=str(i),
+            ), row=1, col=1)
 
-    return {
-        'data': traces,
-        'layout': dict(
-            xaxis={'title': 'Date',},
-            yaxis={'title': 'IR',},
-            hovermode='closest',
-        )
-    }
 
-@dash_app.callback(Output('tab-IR-slider', 'children'),
-              [Input('tab-IR-curr-dropdown', 'value'),
-               Input('tab-IR-tenor-dropdown', 'value')])
-def tab_IR_slider(curr, tenor):
-    t_min, t_max, t_list = utils.compute_t_range(
-      currtag=curr, tenor=[int(tenor)])
+    #Bottom plot, df2
+    if z2 == 'None':
+        fig.append_trace(go.Scattergl(
+            x=df2['Start_time_obj'],
+            y=df2[y2],
+            mode='markers',
+            opacity=1.,
+            marker=dict(size=5),
+            name=ds2,
+        ), row=2, col=1)
+    
+    else:
+        for i in df2[z2].unique():
+            dff = df2[df2[z2] == i]
+            fig.append_trace(go.Scattergl(
+                x=dff['Start_time_obj'],
+                y=dff[y2],
+                mode='markers',
+                opacity=1.,
+                marker=dict(size=5),
+                name=str(i),
+            ), row=2, col=1)        
+    
+
+    fig.update_yaxes(title_text=y1, row=1, col=1)
+    fig.update_xaxes(title_text='Date', row=2, col=1)
+    fig.update_yaxes(title_text=y2, row=2, col=1)
+
+    fig.update_layout(height=700)
+    return fig
+ 
+
+@dash_app.callback(Output('tab-pg-slider', 'children'),
+              [Input('tab-tp-ds1', 'value'),
+               Input('tab-tp-ds2', 'value')])
+def tab_pg_slider(ds1, ds2):
+    df1 = data_collector(ds1)   
+    df2 = data_collector(ds2)   
+    t_min, t_max, t_list = utils.trim_time(df1, df2)
+
     return html.Div(
         dcc.RangeSlider(
-            id='IR-year-slider',
+            id='pg-slider',
             min=t_min,
             max=t_max,
-            value=[2010, 2015],
+            value=[t_min, t_max],
             marks={year: str(year) for year in t_list},
             step=1./12.
         )
     )  
+'''
 
 @dash_app.callback(Output('tab-IR-slider-container', 'children'),
               [Input('IR-year-slider', 'value')])
