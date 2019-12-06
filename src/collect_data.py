@@ -43,4 +43,19 @@ def data_collector(dataset):
     elif dataset == 'Heart':
         df = Process_Time(df_raw, 'start_time', 'end_time', 'time_offset',
                           False, '%Y-%m-%d %H:%M:%S.%f').run()          
+        df = df.iloc[2:,:] #Do not include first two rows. They date back to 1970.
+
+    elif dataset == 'Floors':
+        df = Process_Time(df_raw, 'start_time', 'end_time', 'time_offset',
+                          False, '%Y-%m-%d %H:%M:%S.%f').run() 
+
+    elif dataset == 'Calories':
+        df = Process_Time(df_raw, 'day_time', None, None, False, 'milisec').run()
+        df['Active Time [hr]'] = np.array([t/3600000. for t in df['active_time']])
+
+    elif dataset == 'Summary':
+        df = Process_Time(df_raw, 'day_time', None, None, False, 'milisec').run()     
+        df['Longest Idle Time [hr]'] = np.array([t/3600000. for t in df['longest_idle_time']])
+        df['Longest Active Time [hr]'] = np.array([t/3600000. for t in df['longest_active_time']])
+
     return df

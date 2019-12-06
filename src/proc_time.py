@@ -6,7 +6,11 @@ from dateutil import tz
 
 #List of holidays in the relevant time range.
 holidays_obj = holidays.CountryHoliday('Canada', state=None, prov='Ontario')
-holidays_list = holidays_obj[datetime(2016,5,1):datetime(2019,7,1)] 
+holidays_list = (
+  holidays_obj['2016-1-1':'2016-12-31']
+  + holidays_obj['2017-1-1':'2017-12-31'] 
+  + holidays_obj['2018-1-1':'2018-12-31'] 
+  + holidays_obj['2019-1-1':'2019-12-31'])
 holidays_list_str = [t.strftime('%Y/%m/%d') for t in holidays_list]
 
 weekday_str2num = {'Sunday':1, 'Monday':2, 'Tuesday':3, 'Wednesday':4,

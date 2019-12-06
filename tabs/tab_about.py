@@ -2,7 +2,7 @@ import dash_html_components as html
 import dash_core_components as dcc
 import base64
 
-img_path = './images/timeline.png'
+img_path = './images/pexels_data-analysis.jpeg'
 img_base64 = base64.b64encode(open(img_path, 'rb').read()).decode('ascii')
 
 tab_about_layout = html.Div([
@@ -25,7 +25,6 @@ tab_about_layout = html.Div([
     ),
 
     #Body.
-    #E.g. https://community.plot.ly/t/two-graphs-side-by-side/5312
     html.Div([
 
         html.Div([
@@ -36,15 +35,21 @@ tab_about_layout = html.Div([
                     """
                     ###### OVERVIEW
                     This web app analyzes data collected from a health app
-                    and provides interactive plots that summarize relevant trends.
+                    and provides interactive plots that allow for data exploration
+                    and figures that summarize relevant trends.
 
-                    #Target questions.
+                    Based on the trends I find, I infer the person's routine,
+                    location, job, age, and gender. This section will be deployed
+                    in the near future.
                     
                     &nbsp;&nbsp;&nbsp;&nbsp;
                     
                     ###### DATA
-                    The data is comprised by a colection ... from multiple devices,
-                    spanning Jun-2016 to Jun-2019.
+                    The data is comprised by a series of csv files collected
+                    from multiple devices, but all regarding the same person.
+                    The time period spans Jun-2016 to Jun-2019.
+                    
+                    The person is anonymous and the data was sourced ethically.
                     
                     &nbsp;&nbsp;&nbsp;&nbsp;
 
@@ -54,7 +59,7 @@ tab_about_layout = html.Div([
 
                     Github source code: https://github.com/Heringer-Epson/health_analysis
                     """,
-                    style={'marginLeft': '3em'},
+                    style={'marginLeft': '3em', 'marginTop': '5em'},
                 ),      
                 
             ], className="six columns"),
@@ -63,9 +68,14 @@ tab_about_layout = html.Div([
             html.Div([
                 html.Img(
                   src='data:image/png;base64,{}'.format(img_base64),
-                  style={'width':'700px', 'height':'800px', 'margin':'auto'}),
-
-            ], style={'marginTop': '-5em'}, className="six columns"),
+                  style={'width':'700px', 'height':'600px', 'margin':'auto'}),
+                dcc.Markdown(
+                    """
+                    Image credit: Kevin Ku. Sourced from https://www.pexels.com 
+                    """
+                )
+            ], style={'marginTop': '3em'}, className="six columns"),
+     
         ], className="row")
     ])
 ])   

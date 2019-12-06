@@ -1,6 +1,6 @@
 import numpy as np
+import pandas as pd
 from datetime import datetime as dt
-
 
 dataset2fname = {
   'Sleep': 'sleep.csv',
@@ -8,6 +8,9 @@ dataset2fname = {
   'Stress': 'stress.csv',
   'Step': 'step_daily_trend.csv',
   'Heart': 'heart_rate.csv',
+  'Floors': 'floors_climbed.csv',
+  'Calories': 'calories_burned.csv',
+  'Summary': 'day_summary.csv'
 }
 
 dataset2cols = {
@@ -16,7 +19,11 @@ dataset2cols = {
                'max_heart_rate', 'Exercise Duration [min]'],
   'Stress': ['score'],
   'Step': ['distance', 'count', 'speed', 'calorie', 'source_type'],
-  'Heart': ['heart_rate', 'deviceuuid', 'start_hour', 'end_hour', 'max', 'min']
+  'Heart': ['heart_rate', 'deviceuuid', 'start_hour', 'end_hour', 'max', 'min'],
+  'Floors': ['floor'],
+  'Calories': ['rest_calorie', 'active_calorie', 'Active Time [hr]'],
+  'Summary': ['longest_idle_time', 'longest_active_time', 'distance',
+              'score', 'calorie']
 }
 
 dataset2zoptions = {
@@ -24,10 +31,12 @@ dataset2zoptions = {
   'Exercise': ['None', 'exercise', 'weekday', 'is_holiday'],
   'Stress': ['None', 'weekday', 'is_holiday'],
   'Step': ['None', 'weekday', 'is_holiday', 'source_type'],
-  'Heart': ['None', 'time_offset', 'deviceuuid', 'weekday', 'is_holiday', 'source_type'],
+  'Heart': ['None', 'time_offset', 'deviceuuid', 'weekday', 'is_holiday'],
+  'Floors': ['None', 'time_offset', 'deviceuuid', 'weekday', 'is_holiday'],
+  'Calories': ['None', 'deviceuuid', 'weekday', 'is_holiday'],
+  'Summary': ['None', 'deviceuuid', 'weekday', 'is_holiday', 'goal'],
   
 }
-
 
 def trim_time(df1, df2):
     t_min = max((min(df1.Start_time_obj), min(df2.Start_time_obj)))
@@ -45,3 +54,13 @@ def format_date(time_range):
     t_max = '{:04d}-{:02d}-01'.format(int(time_range[1] // 1),
                                       int(12.*(time_range[1] % 1)) + 1)
     return t_min, t_max
+
+def make_tz_changers(df, time_key, tz_key):
+    df.sort_values(by=time_key, inplace=True)
+    tz_list = df[tz_key].values
+    time_obj = df[time_key].values
+    cond = tz_list[:-1] != tz_list[1:]
+    tz_changers = {}
+    tz_changers['time_obj'] = time_obj[1:][cond]
+    tz_changers['tz'] = tz_list[1:][cond]
+    return pd.DataFrame(tz_changers)

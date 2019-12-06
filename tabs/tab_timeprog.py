@@ -26,7 +26,13 @@ tab_timeprog_layout = html.Div([
         dcc.Dropdown(id='tab-tp-ds1-y', style={'width': '150px', 'marginLeft': '.5em'}),
 
         html.H6('color-code:', style={'marginLeft': '3em'}),
-        dcc.Dropdown(id='tab-tp-ds1-z', style={'width': '150px', 'marginLeft': '.5em'})
+        dcc.Dropdown(id='tab-tp-ds1-z', style={'width': '150px', 'marginLeft': '.5em'}),
+
+        html.Button(
+                id='tab-pg-tz',
+                n_clicks=1,
+                children='Toggle Timezone Changes',
+                style={'width': '300px', 'marginLeft': '5em'}),     
 
     ], style={'display': 'flex', 'marginTop': '1.5em'}), 
 
