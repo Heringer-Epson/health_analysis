@@ -1,2 +1,4 @@
 data/__MACOSX/
 .ipynb_checkpoints/
+./src/__pycache__/
+./tabs/__pycache__/
