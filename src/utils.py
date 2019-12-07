@@ -38,6 +38,11 @@ dataset2zoptions = {
   
 }
 
+def time2yearf(time_obj):
+    t_aux = pd.DatetimeIndex(time_obj)
+    timef_list = [t.year + (t.month - 1.) / 12. + (t.day - 1.) / 365. for t in t_aux]
+    return timef_list
+
 def trim_time(df1, df2):
     t_min = max((min(df1.Start_time_obj), min(df2.Start_time_obj)))
     t_max = min((max(df1.Start_time_obj), max(df2.Start_time_obj)))

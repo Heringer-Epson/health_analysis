@@ -12,7 +12,7 @@ import pandas as pd
 
 from src import utils
 from src.collect_data import data_collector
-from src.proc_time import Process_Time
+from src.proc_time import Process_Time, holidays_list_str
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 dash_app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -61,12 +61,13 @@ def tab_tl_graph(tog_tz, tog_hl):
         df = data_collector(name)
         M[name] = df
         time_obj = df['date'].values
+        timef = utils.time2yearf(time_obj)
         if 'time_offset' in df.columns:
-            complete_t += list(time_obj)
+            complete_t += list(timef)
             complete_tz += list(df['time_offset'].values)
     
         traces.append(go.Scattergl(
-            x=time_obj,
+            x=timef,
             y=(i + 1) * np.ones(len(time_obj)),
             mode='markers',
             opacity=.7,
@@ -81,7 +82,6 @@ def tab_tl_graph(tog_tz, tog_hl):
                         hovermode='closest'))
 
     #Toggle tz_change.
-    #Not Working!!
     if tog_tz % 2 == 0:
         aux_df = pd.DataFrame({'date':complete_t, 'time_offset':complete_tz})
         df_tz = utils.make_tz_changers(aux_df, 'date', 'time_offset')
@@ -89,24 +89,30 @@ def tab_tl_graph(tog_tz, tog_hl):
         tz_changers = utils.make_tz_changers(aux_df, 'date', 'time_offset') 
         for i, (t, tz) in enumerate(
           zip(tz_changers['time_obj'].values, tz_changers['tz'].values)):             
-            print (t,tz)
             fig.add_shape(
                     go.layout.Shape(
-                        type='line',
-                        xref='x',
-                        yref='paper',
-                        x0=t.replace('/', '-'),
-                        x1=t.replace('/', '-'),
-                        y0=0,
-                        y1=1,
-                        line=dict(
-                            color='LightSeaGreen',
-                            width=2,
-                        ),
+                        type='line', xref='x', yref='paper', x0=t, x1=t,
+                        y0=0, y1=1, opacity=0.3,
+                        line=dict(color='LightSeaGreen', width=2, dash='dash'),
+                    ))
+
+    if tog_hl % 2 == 0:
+        t_hl = utils.time2yearf(holidays_list_str)
+        for i, t in enumerate(t_hl):             
+            fig.add_shape(
+                    go.layout.Shape(
+                        type='line', xref='x', yref='paper', x0=t, x1=t,
+                        y0=0, y1=1, opacity=0.3,
+                        line=dict(color='firebrick', width=2, dash='dot'),
                     ))
 
     #Improve fig ticks.
     fig.update_layout(
+        xaxis = dict(
+            tickmode = 'array',
+            tickvals = np.arange(2016.5, 2019.51, 0.5),
+            ticktext = ['June 2016', 'Jan. 2017', 'June 2017', 'Jan. 2018',
+                        'June 2018', 'Jan. 2019', 'June 2019']),
         yaxis = dict(
             tickmode = 'array',
             tickvals = np.arange(0, len(df_names) + 1.1, 1),
