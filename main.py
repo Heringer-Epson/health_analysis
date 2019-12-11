@@ -50,25 +50,19 @@ def render_content(tab):
                Input('tab-pl-hl', 'n_clicks'),])
 def tab_tl_graph(tog_tz, tog_hl):
 
-    M ={}
     traces = []
 
-    #Get dataframe:
+    #Give an order when plotting the info from the loaded json file.
     df_names = ['Sleep', 'Exercise', 'Stress', 'Step', 'Heart', 'Floors',
                 'Calories', 'Summary']
-    complete_tz, complete_t = [], []
+    with open('./outputs/time_collection.json', 'r') as inp:
+        M = json.load(inp)
+
     for i, name in enumerate(df_names):
-        df = data_collector(name)
-        M[name] = df
-        time_obj = df['date'].values
-        timef = utils.time2yearf(time_obj)
-        if 'time_offset' in df.columns:
-            complete_t += list(timef)
-            complete_tz += list(df['time_offset'].values)
-    
+        timef = M[name]    
         traces.append(go.Scattergl(
             x=timef,
-            y=(i + 1) * np.ones(len(time_obj)),
+            y=(i + 1) * np.ones(len(timef)),
             mode='markers',
             opacity=.7,
             marker=dict(size=2),
@@ -83,12 +77,7 @@ def tab_tl_graph(tog_tz, tog_hl):
 
     #Toggle tz_change.
     if tog_tz % 2 == 0:
-        aux_df = pd.DataFrame({'date':complete_t, 'time_offset':complete_tz})
-        df_tz = utils.make_tz_changers(aux_df, 'date', 'time_offset')
-
-        tz_changers = utils.make_tz_changers(aux_df, 'date', 'time_offset') 
-        for i, (t, tz) in enumerate(
-          zip(tz_changers['time_obj'].values, tz_changers['tz'].values)):             
+        for i, t in enumerate(M['tz_change_dates']):             
             fig.add_shape(
                     go.layout.Shape(
                         type='line', xref='x', yref='paper', x0=t, x1=t,
@@ -97,8 +86,7 @@ def tab_tl_graph(tog_tz, tog_hl):
                     ))
 
     if tog_hl % 2 == 0:
-        t_hl = utils.time2yearf(holidays_list_str)
-        for i, t in enumerate(t_hl):             
+        for i, t in enumerate(M['date_holidays']):             
             fig.add_shape(
                     go.layout.Shape(
                         type='line', xref='x', yref='paper', x0=t, x1=t,
@@ -241,22 +229,13 @@ def tab_tl_graph(ds1, y1, z1, ds2, y2, z2, date_range, tog_tz):
     #Toggle Timezone changes.
     if tog_tz % 2 == 0:
         if 'time_offset' in df1.columns: 
-            df1_tz = utils.make_tz_changers(df1, 'date', 'time_offset')
-            
-            for i, (t, tz) in enumerate(
-              zip(df1_tz['time_obj'].values, df1_tz['tz'].values)):
+            tz_list = utils.make_tz_changers(df1, 'date', 'time_offset')
+            for i, t in enumerate(tz_list):
                 fig.add_shape(
                         go.layout.Shape(
-                            type='line',
-                            xref='paper',
-                            x0=t.replace('/', '-'),
-                            x1=t.replace('/', '-'),
-                            y0=0,
-                            y1=1,
-                            line=dict(
-                                color='LightSeaGreen',
-                                width=2,
-                            ),
+                            type='line', x0=t.replace('/', '-'), x1=t.replace('/', '-'),
+                            y0=0, y1=1,
+                            line=dict(color='LightSeaGreen', width=2, dash='dot',),
                         ), row=1, col=1)
                 fig.layout.shapes[i]['yref']='paper'
     
@@ -267,7 +246,6 @@ def tab_tl_graph(ds1, y1, z1, ds2, y2, z2, date_range, tog_tz):
         height=650,
         margin=go.layout.Margin(b=20,t=10),)
     return fig
- 
 
 @dash_app.callback(Output('tab-pg-slider', 'children'),
               [Input('tab-tp-ds1', 'value'),
@@ -298,5 +276,5 @@ def tab_IR_slider_container(date_range):
 #=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-END: TABs-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-
                                 
 if __name__ == '__main__':
-    dash_app.run_server(host='0.0.0.0', port=8050, debug=False)
-    #dash_app.run_server(debug=True)
+    #dash_app.run_server(host='0.0.0.0', port=8050, debug=False)
+    dash_app.run_server(debug=True)

@@ -10,8 +10,12 @@ exertype_num2str = {1001:'Walking', 0:'Custom', 14001:'Swimming',
 
 def data_collector(dataset):
 
-    fpath = os.path.join('./data/', utils.dataset2fname[dataset])
-    df_raw = pd.read_csv(fpath, header=0, index_col=0, low_memory=False)
+    try:
+        fpath = os.path.join('./data/', utils.dataset2fname[dataset])
+        df_raw = pd.read_csv(fpath, header=0, index_col=0, low_memory=False)
+    except:
+        fpath = os.path.join('../data/', utils.dataset2fname[dataset])
+        df_raw = pd.read_csv(fpath, header=0, index_col=0, low_memory=False)
 
     if dataset == 'Sleep':
         #Rename columns for simplicity.

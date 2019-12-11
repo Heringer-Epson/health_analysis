@@ -65,7 +65,4 @@ def make_tz_changers(df, time_key, tz_key):
     tz_list = df[tz_key].values
     time_obj = df[time_key].values
     cond = tz_list[:-1] != tz_list[1:]
-    tz_changers = {}
-    tz_changers['time_obj'] = time_obj[1:][cond]
-    tz_changers['tz'] = tz_list[1:][cond]
-    return pd.DataFrame(tz_changers)
+    return time_obj[1:][cond]
