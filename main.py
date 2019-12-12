@@ -3,6 +3,7 @@ import json
 import dash
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
+import plotly.express as px
 from plotly.subplots import make_subplots
 import dash_html_components as html
 import dash_core_components as dcc
@@ -22,6 +23,8 @@ app = dash_app.server
 from tabs import tab_about
 from tabs import tab_timeline
 from tabs import tab_timeprog
+from tabs import tab_hist
+from tabs import tab_week
 
 dash_app.title = 'Data Analysis'
 dash_app.layout = html.Div([
@@ -29,6 +32,8 @@ dash_app.layout = html.Div([
         dcc.Tab(label='About', value='tab-about'),
         dcc.Tab(label='Timeline', value='tab-timeline'),
         dcc.Tab(label='Explore Data', value='tab-timeprog'),
+        dcc.Tab(label='Histograms', value='tab-hist'),
+        dcc.Tab(label='Weekly', value='tab-week'),
     ]),
     html.Div(id='tabs-main-content')
 ])
@@ -42,6 +47,10 @@ def render_content(tab):
         return tab_timeline.tab_timeline_layout
     elif tab == 'tab-timeprog':
         return tab_timeprog.tab_timeprog_layout
+    elif tab == 'tab-hist':
+        return tab_hist.tab_hist_layout
+    elif tab == 'tab-week':
+        return tab_week.tab_week_layout
 
 #=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-TAB: timeprog-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -272,6 +281,114 @@ def tab_IR_slider_container(date_range):
     t_min, t_max = utils.format_date(date_range)
     return 'Date range is "{}" -- "{}"'.format(t_min, t_max)
 
+
+#=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-TAB: histogram-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+
+#Dataset 1 (top plot) inputs.
+@dash_app.callback(Output('tab-hist-y', 'options'),
+                   [Input('tab-hist-ds', 'value')])
+def make_variable_dropdown(dataset):
+    cols = utils.dataset2cols[dataset]
+    return  [{'label': i, 'value': i} for i in cols]
+
+@dash_app.callback(Output('tab-hist-y', 'value'),
+                   [Input('tab-hist-y', 'options')])
+def make_variable_dropdown(options):
+    return options[0]['value']
+
+@dash_app.callback(Output('tab-hist-graph', 'figure'),
+              [Input('tab-hist-ds', 'value'),
+               Input('tab-hist-y', 'value'),
+               Input('hist-slider', 'value'),])
+def tab_tl_graph(ds, y, date_range):
+    t_min, t_max = utils.format_date(date_range)
+    df = data_collector(ds)   
+    dff = df[((df['Start_time_obj'] > t_min) & (df['Start_time_obj'] < t_max))]
+    aux_df = dff[[y]]
+    fig = px.histogram(dff, x=y)
+    return fig
+
+@dash_app.callback(Output('tab-hist-slider', 'children'),
+              [Input('tab-hist-ds', 'value')])
+def tab_pg_slider(ds):
+    df = data_collector(ds)   
+    t_min, t_max, t_list = utils.trim_time(df, df)
+
+    return html.Div(
+        dcc.RangeSlider(
+            id='hist-slider',
+            min=t_min,
+            max=t_max,
+            value=[t_min, t_max],
+            marks={year: str(year) for year in t_list},
+            step=1./12.
+        )
+    )  
+
+@dash_app.callback(Output('tab-hr-slider-container', 'children'),
+              [Input('hr-slider', 'value')])
+def tab_IR_slider_container(date_range):
+    t_min, t_max = utils.format_date(date_range)
+    return 'Date range is "{}" -- "{}"'.format(t_min, t_max)
+
+#=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-TAB: histogram-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+
+#Dataset 1 (top plot) inputs.
+@dash_app.callback(Output('tab-week-y', 'options'),
+                   [Input('tab-week-ds', 'value')])
+def make_variable_dropdown(dataset):
+    cols = utils.dataset2cols[dataset]
+    return  [{'label': i, 'value': i} for i in cols]
+
+@dash_app.callback(Output('tab-week-y', 'value'),
+                   [Input('tab-week-y', 'options')])
+def make_variable_dropdown(options):
+    return options[0]['value']
+
+@dash_app.callback(Output('tab-week-graph', 'figure'),
+              [Input('tab-week-ds', 'value'),
+               Input('tab-week-y', 'value'),
+               Input('week-slider', 'value'),])
+def tab_tl_graph(ds, y, date_range):
+    t_min, t_max = utils.format_date(date_range)
+    df = data_collector(ds)   
+    dff = df[((df['Start_time_obj'] > t_min) & (df['Start_time_obj'] < t_max))]
+    aux_df = dff[[y]]
+    fig = px.box(dff, x='weekday_num', y=y)
+
+    fig.update_layout(
+        xaxis = dict(
+            title='Day of the Week',
+            tickmode = 'array',
+            tickvals = [1, 2, 3, 4, 5, 6, 7],
+            ticktext = [
+                'Sunday', 'Monday', 'Tuesday', 'Wednesday',
+                'Thursday', 'Friday', 'Saturday']),
+    )
+    return fig
+
+@dash_app.callback(Output('tab-week-slider', 'children'),
+              [Input('tab-week-ds', 'value')])
+def tab_pg_slider(ds):
+    df = data_collector(ds)   
+    t_min, t_max, t_list = utils.trim_time(df, df)
+
+    return html.Div(
+        dcc.RangeSlider(
+            id='week-slider',
+            min=t_min,
+            max=t_max,
+            value=[t_min, t_max],
+            marks={year: str(year) for year in t_list},
+            step=1./12.
+        )
+    )  
+
+@dash_app.callback(Output('tab-week-slider-container', 'children'),
+              [Input('week-slider', 'value')])
+def tab_IR_slider_container(date_range):
+    t_min, t_max = utils.format_date(date_range)
+    return 'Date range is "{}" -- "{}"'.format(t_min, t_max)
 
 #=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-END: TABs-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-
                                 
